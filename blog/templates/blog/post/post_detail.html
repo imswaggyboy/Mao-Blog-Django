@@ -58,9 +58,10 @@
                 </fieldset>
                 <br>
                 <div class="form-group">
-                    <button class="btn btn-outline-info" type="submit">Update</button>
+                    <button class="btn btn-warning" type="submit">Comment</button>
                 </div>
             </form>
+            <hr class='bold-hr>'
             {% for comment in post.comments.all %}
             <div class="comments-list">
               <div class="media">
@@ -70,10 +71,17 @@
                 <div class="media-body">
                   
                   <p><small class="media-heading user_name">{{comment.name}}</small></p>
-                  {{ comment.body}}
+                  {{ comment.comment}}
                   
                   <p><small class="text-muted">{{comment.created }}</small></p>
-                  <p><small><a href="">Like</a></small></p>
+                  <p>
+                    <small class="text-muted">{{comment.number_of_likes_comment }}</small>
+                    {% if request.user in comment.comment_likes.all %}
+                      <small><a href="{% url 'blog:like_comment' comment.id %}">Unlike</a></small>
+                    {%else%}
+                      <small><a href="{% url 'blog:like_comment' comment.id %}">Like</a></small>
+                    {% endif%}
+                  </p>
                 </div>
               </div>
             </div>

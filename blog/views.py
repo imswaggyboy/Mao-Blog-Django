@@ -1,6 +1,6 @@
 import os
 from django.conf import settings
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib import messages
 from .models import Post,PostComments
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -33,6 +33,19 @@ def like_post(request,pk):
         messages.error(request,"You need to login first")
         return redirect('login')
 
+def like_comment(request, pk):
+    """Handle user likes on comments"""
+    if request.user.is_authenticated:
+        comment = get_object_or_404(PostComments,
+                                id=pk)
+        if request.user in comment.comment_likes.all():
+            comment.comment_likes.remove(request.user)
+        else:
+            comment.comment_likes.add(request.user)
+        return redirect(comment.post.get_absolute_url())
+    else:
+        messages.error(request,'Please Login First!')
+        return redirect('login')
 
 def post_details(request,year,month,day,slug,pk):
     post = get_object_or_404(Post,
@@ -47,16 +60,18 @@ def post_details(request,year,month,day,slug,pk):
             comment = None
             form = CommentPostForm(data=request.POST)
             if form.is_valid():
-                new_comment = form.save(commit=False)
+                comment = form.save(commit=False)
                 #assigned the comment to post
-                comment.post = new_comment
+                comment.post = post
+                comment.name = request.user
                 #save the comment
                 comment.save()
+                return redirect(post.get_absolute_url())
                 
     else:
-        comment_form = CommentPostForm()
+        form = CommentPostForm()
     
-    return render(request, 'blog/post/post_detail.html', {'post':post, 'comment_form':comment_form})
+    return render(request, 'blog/post/post_detail.html', {'post':post, 'comment_form':form})
 
 
 # class PostDetailView(DetailView):

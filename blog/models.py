@@ -74,11 +74,14 @@ class Post(models.Model):
 class PostComments(models.Model):
     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
     name = models.ForeignKey(User, on_delete=models.CASCADE)
-    body= models.TextField(max_length=1000)
+    comment_likes = models.ManyToManyField(User,related_name='comment_likes')
+    comment= models.TextField(max_length=1000)
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
 
 
+    def number_of_likes_comment(self):
+        return self.comment_likes.count()
     class Meta:
         ordering = ['created']
 
