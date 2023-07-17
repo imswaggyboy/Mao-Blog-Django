@@ -20,4 +20,8 @@ urlpatterns = [
     path('<int:year>/<int:month>/<int:day>/<slug:slug>/<int:pk>/delete/',
           views.PostDeleteView.as_view(),
             name='post_delete'),
+    
+    path('tagged-posts/<int:id>',views.post_tag_view , name='tagged_posts'),
+    path('search/', views.post_search, name='post_search'),
+
 ]

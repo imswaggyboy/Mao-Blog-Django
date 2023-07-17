@@ -1,22 +1,52 @@
 import os
+
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib import messages
 from .models import Post,PostComments
+from taggit.models import Tag
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.postgres.search import SearchVector
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .form import CommentPostForm
+from .form import CommentPostForm,SearchForm
 from django.core.mail import send_mail
+
 
 # Create your views here.
 
 
 
 
-def post_comment(request):
-    pass
+def post_search(request):
+    form = SearchForm()
+    query = None
+    results =[]
+
+    if 'query' in request.GET:
+        form = SearchForm(request.GET)
+        if form.is_valid():
+            query = form.cleaned_data['query']
+            results = Post.published.annotate(
+            search=SearchVector('title', 'body'),
+            ).filter(search=query)
+    return render(request,
+                    'blog/post/search.html',
+                    {'form': form,
+                    'query': query,
+                    'results': results})
+
+def post_tag_view(request,id):
+    post = Post.published.all()
+    tag  = get_object_or_404(Tag, id=id)
+    posts = post.filter(tags__in=[tag])
+    context = {
+        'posts':posts,
+        'tag':tag
+    }
+    return render(request, 'blog/post/tag_posts.html', context)
+    
 
 
 
@@ -104,7 +134,7 @@ class PostListView(ListView):
 
 class PostCreateView(LoginRequiredMixin,CreateView):
     model = Post
-    fields = ['title','body','image','status']
+    fields = ['title','tags','body','image','status']
 
     def form_valid(self, form):
         form.instance.author=self.request.user
@@ -114,7 +144,7 @@ class PostCreateView(LoginRequiredMixin,CreateView):
 
 class PostUpdateView(LoginRequiredMixin,UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title','body','image']
+    fields = ['title','tags','body','image']
 
     def form_valid(self, form):
         form.instance.author=self.request.user

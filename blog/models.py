@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.text import slugify
 from PIL import Image
+from taggit.managers import TaggableManager
+
 # Create your models here.
 
 class PublishedManager(models.Manager):
@@ -34,6 +36,7 @@ class Post(models.Model):
     status = models.CharField(max_length=2,choices=Status.choices,default=Status.DRAFT)
     objects = models.Manager() #the default manager
     published = PublishedManager()
+    tags = TaggableManager()
 
     #count like
     def number_of_like(self):
